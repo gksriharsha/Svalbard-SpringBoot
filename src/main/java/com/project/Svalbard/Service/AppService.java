@@ -11,6 +11,7 @@ import com.project.Svalbard.Model.Angular.Platform;
 import com.project.Svalbard.Model.Angular.Results;
 import com.project.Svalbard.Model.db.Classification;
 import com.project.Svalbard.Model.db.Task;
+import com.project.Svalbard.Util.CustomStrCmp;
 import com.project.Svalbard.Util.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -66,33 +66,7 @@ public class AppService {
         return Flexcards;
     }
 
-    public List<GeneralCard> hpsearch(HashMap<String, String> searchparams) throws Exception {
-        HashMap<String, String> hplist = new HashMap<>();
-        Task task = taskRepository.findByName(searchparams.get("Classifier"));
-        HashMap<String, Object> taskMap1 = (HashMap<String, Object>) Mapper.getfromObject(task);
-        while (taskMap1.values().remove(null)) ;
-        BiMap<Object, String> taskMap = HashBiMap.create(taskMap1).inverse();
-        searchparams.forEach((k, v) -> {
-            if (!k.contains("Classifier")) {
-                hplist.put(k, v);
-            }
-        });
-
-        Classification queryclf;
-        HashMap<String, Object> clfmap = new HashMap<>();
-        hplist.forEach((k, v) -> {
-            String hpnumber = taskMap.get(k);
-            clfmap.put(hpnumber, v);
-        });
-        queryclf = Mapper.getasClassification(clfmap);
-        Example<Classification> clfex = Example.of(queryclf, ExampleMatcher.matching()
-                .withIgnorePaths("id", "accuracy", "precision", "fscore", "recall", "time", "precision1", "recall1", "fscore1")
-                .withIgnoreNullValues());
-
-        return classificationRepository.findAll(clfex).stream().map(this::convertToGeneralCard).collect(Collectors.toList());
-    }
-
-    private GeneralCard convertToGeneralCard(Classification clf) {
+    public static GeneralCard convertToGeneralCard(Classification clf) {
         GeneralCard gc = new GeneralCard();
         gc.setTask(clf.getTask().getName());
         gc.setPlatform(new Platform("Python", "scikit-learn"));
@@ -104,7 +78,7 @@ public class AppService {
         return gc;
     }
 
-    private HashMap<String, Object> convertToFlexCard(Classification clf, List<String> required) throws Exception {
+    public static HashMap<String, Object> convertToFlexCard(Classification clf, List<String> required) {
         com.project.Svalbard.Model.db.Dataset d = clf.getdataset();
         HashMap<String, Object> options = (HashMap<String, Object>) Mapper.getfromObject(d);
         HashMap<String, Object> flexCard = new HashMap<>();
@@ -134,5 +108,70 @@ public class AppService {
         }
         flexCard.put("results", results);
         return flexCard;
+    }
+
+    public List<Classification> hpsearch(HashMap<String, String> searchparams) {
+        HashMap<String, String> hplist = new HashMap<>();
+        Task task = taskRepository.findByName(searchparams.get("Classifier"));
+        HashMap<String, Object> taskMap1 = (HashMap<String, Object>) Mapper.getfromObject(task);
+        while (taskMap1.values().remove(null)) ;
+        BiMap<Object, String> taskMap = HashBiMap.create(taskMap1).inverse();
+        searchparams.forEach((k, v) -> {
+            if (!k.contains("Classifier")) {
+                hplist.put(k, v);
+            }
+        });
+
+        Classification queryclf;
+        HashMap<String, Object> clfmap = new HashMap<>();
+        hplist.forEach((k, v) -> {
+            String hpnumber = taskMap.get(k);
+            clfmap.put(hpnumber, v);
+        });
+        queryclf = Mapper.getasClassification(clfmap);
+        Example<Classification> clfex = Example.of(queryclf, ExampleMatcher.matching()
+                .withIgnorePaths("id", "accuracy", "precision", "fscore", "recall", "time", "precision1", "recall1", "fscore1")
+                .withIgnoreNullValues());
+
+        return classificationRepository.findAll(clfex);
+    }
+
+    public List<Classification> filterbyresults(List<Classification> originalList, Results results) {
+        ExampleMatcher matcher = ExampleMatcher.matching().withIgnorePaths("id", "precision1", "recall1", "fscore1");
+        HashMap<String, Object> resquery = (HashMap<String, Object>) Mapper.getfromObject(results);
+        Classification clf = new Classification();
+        clf.setId(0);
+        HashMap<String, Object> clfmap = (HashMap<String, Object>) Mapper.getfromObject(clf);
+        while (resquery.values().remove(null)) ;
+        resquery.forEach((k, v) -> {
+            clfmap.forEach((i, j) -> {
+                if (CustomStrCmp.compare(k, i)) {
+                    clfmap.replace(i, v);
+                }
+            });
+        });
+        Classification querclf = Mapper.getasClassification(clfmap);
+        Example<Classification> clfex = Example.of(querclf, matcher);
+        return classificationRepository.findAll(clfex); //TODO this function matches exactly greater than function should be implemented.
+    }
+
+    public List<GeneralCard> accuracyfilter(float acc) {
+        List<GeneralCard> orderedCards = new ArrayList<>();
+        for (Classification c :
+                classificationRepository.
+                        findByAccuracyGreaterThanEqualOrderByAccuracyDesc(acc)) {
+            orderedCards.add(convertToGeneralCard(c));
+        }
+        return orderedCards;
+    }
+
+    public List<GeneralCard> fscorefilter(float fscore) {
+        List<GeneralCard> orderedCards = new ArrayList<>();
+        for (Classification c :
+                classificationRepository.
+                        findByFscoreGreaterThanEqualOrderByFscore(fscore)) {
+            orderedCards.add(convertToGeneralCard(c));
+        }
+        return orderedCards;
     }
 }
