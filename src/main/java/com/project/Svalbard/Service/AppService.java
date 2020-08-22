@@ -11,10 +11,7 @@ import com.project.Svalbard.Model.Angular.Platform;
 import com.project.Svalbard.Model.Angular.Results;
 import com.project.Svalbard.Model.db.Classification;
 import com.project.Svalbard.Model.db.Task;
-import com.project.Svalbard.Util.CustomStrCmp;
 import com.project.Svalbard.Util.Mapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
@@ -24,11 +21,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 
 @Service
 public class AppService {
 
-    private static final Logger logger = LoggerFactory.getLogger(AppService.class);
+    //private static final Logger logger = LoggerFactory.getLogger(AppService.class);
 
     @Autowired
     private ClassificationRepository classificationRepository;
@@ -70,7 +69,7 @@ public class AppService {
         GeneralCard gc = new GeneralCard();
         gc.setTask(clf.getTask().getName());
         gc.setPlatform(new Platform("Python", "scikit-learn"));
-        logger.info("Classification Id for - " + clf.getFid());
+        //logger.info("Classification Id for - " + clf.getFid());
         gc.setDataset(new Dataset(clf.getFid(), clf.getdataset().getName(), clf.getdataset().getFeatures(),
                 clf.getdataset().getInstances(), clf.getdataset().getNumberOfClasses()));
         gc.setProcess("Classification");
@@ -136,24 +135,23 @@ public class AppService {
         return classificationRepository.findAll(clfex);
     }
 
-    public List<Classification> filterbyresults(List<Classification> originalList, Results results) {
-        ExampleMatcher matcher = ExampleMatcher.matching().withIgnorePaths("id", "precision1", "recall1", "fscore1");
-        HashMap<String, Object> resquery = (HashMap<String, Object>) Mapper.getfromObject(results);
-        Classification clf = new Classification();
-        clf.setId(0);
-        HashMap<String, Object> clfmap = (HashMap<String, Object>) Mapper.getfromObject(clf);
-        while (resquery.values().remove(null)) ;
-        resquery.forEach((k, v) -> {
-            clfmap.forEach((i, j) -> {
-                if (CustomStrCmp.compare(k, i)) {
-                    clfmap.replace(i, v);
-                }
-            });
-        });
-        Classification querclf = Mapper.getasClassification(clfmap);
-        Example<Classification> clfex = Example.of(querclf, matcher);
-        return classificationRepository.findAll(clfex); //TODO this function matches exactly greater than function should be implemented.
-    }
+//    public List<Classification> filterbyresults(List<Classification> originalList, Results results) {
+//        ExampleMatcher matcher = ExampleMatcher.matching().withIgnorePaths("id", "precision1", "recall1", "fscore1");
+//        HashMap<String, Object> resquery = (HashMap<String, Object>) Mapper.getfromObject(results);
+//        Classification clf = new Classification();
+//        HashMap<String, Object> clfmap = (HashMap<String, Object>) Mapper.getfromObject(clf);
+//        while (resquery.values().remove(null)) ;
+//        resquery.forEach((k, v) -> {
+//            clfmap.forEach((i, j) -> {
+//                if (CustomStrCmp.compare(k, i)) {
+//                    clfmap.replace(i, v);
+//                }
+//            });
+//        });
+//        Classification querclf = Mapper.getasClassification(clfmap);
+//        Example<Classification> clfex = Example.of(querclf, matcher);
+//        return classificationRepository.findAll(clfex); //TODO this function matches exactly greater than function should be implemented.
+//    }
 
     public List<GeneralCard> accuracyfilter(float acc) {
         List<GeneralCard> orderedCards = new ArrayList<>();
@@ -169,7 +167,7 @@ public class AppService {
         List<GeneralCard> orderedCards = new ArrayList<>();
         for (Classification c :
                 classificationRepository.
-                        findByFscoreGreaterThanEqualOrderByFscore(fscore)) {
+                        findByFscoreGreaterThanEqualOrderByFscoreDesc(fscore)) {
             orderedCards.add(convertToGeneralCard(c));
         }
         return orderedCards;

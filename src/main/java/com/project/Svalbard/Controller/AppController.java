@@ -10,7 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -27,12 +30,6 @@ public class AppController {
     @Autowired
     private DatasetRepository datasetRepository;
 
-    @GetMapping(value = "/eid/{uuid}")
-    public ResponseEntity<Classification> getCard(@PathVariable(value = "uuid") UUID uuid) throws Exception {
-        Classification clf = new Classification();
-        clf = classificationRepository.findByEid(uuid).orElseThrow(() -> new Exception("Not found eid"));
-        return ResponseEntity.ok(clf);
-    }
 
     @GetMapping(value = "/home")
     public ResponseEntity<List<Map<String, Object>>> getSomeCards() {

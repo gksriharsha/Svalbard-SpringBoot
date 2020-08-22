@@ -13,10 +13,6 @@ public class Dataset {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-
-    @OneToOne(mappedBy = "dataset", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Classification classification;
-
     @Id
     @Column(name = "fid")
     @Type(type = "org.hibernate.type.UUIDCharType")
@@ -528,9 +524,11 @@ public class Dataset {
     public double getMeanSignalToNoiseRatio() {
         return MeanSignalToNoiseRatio;
     }
-    //endregion
 
     public void setMeanSignalToNoiseRatio(double meanSignalToNoiseRatio) {
         MeanSignalToNoiseRatio = meanSignalToNoiseRatio;
     }
+    //endregion
+
+
 }

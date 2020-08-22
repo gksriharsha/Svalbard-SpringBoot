@@ -1,36 +1,31 @@
 package com.project.Svalbard.Model.db;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.hibernate.annotations.Type;
-
 import javax.persistence.*;
 import java.util.UUID;
 
-enum daskStatus {
-    True,
-    False
-}
-
-@JsonIgnoreProperties(value = {"dataset"})
 @Table(name = "classification")
 @Entity
 public class Classification {
 
-
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private long id;
-    @Id
-    @Column(name = "eid")
-    @Type(type = "org.hibernate.type.UUIDCharType")
-    private UUID eid;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "eid", referencedColumnName = "eid")
+    private ExecutionClf execution;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fid", referencedColumnName = "fid")
     private Dataset dataset;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_name", referencedColumnName = "name")
     private Task task;
+
+    //region hyperparameters and metrics
     @Column(name = "hp_1")
     private String hp1;
     @Column(name = "hp_2")
@@ -63,12 +58,12 @@ public class Classification {
     private float recall1;
     @Column(name = "fscore_1")
     private float fscore1;
-    @Enumerated(EnumType.STRING)
-    @Column(name = "dask")
-    private daskStatus dask;
+    //endregion
 
     public Classification() {
     }
+
+    //region setters and getters
 
     public Dataset getdataset() {
         return dataset;
@@ -76,14 +71,6 @@ public class Classification {
 
     public Task getTask() {
         return task;
-    }
-
-    public UUID getEid() {
-        return eid;
-    }
-
-    public void setEid(UUID eid) {
-        this.eid = eid;
     }
 
     public UUID getFid() {
@@ -94,12 +81,12 @@ public class Classification {
         dataset.setFid(fid);
     }
 
-    public long getId() {
-        return id;
+    public UUID getEid() {
+        return execution.getEid();
     }
 
-    public void setId(long id) {
-        this.id = id;
+    public void setEid(UUID eid) {
+        execution.setEid(eid);
     }
 
     public String getHp1() {
@@ -230,13 +217,6 @@ public class Classification {
         this.fscore1 = fscore1;
     }
 
-    public daskStatus getDask() {
-        return dask;
-    }
-
-    public void setDask(daskStatus dask) {
-        this.dask = dask;
-    }
-
+    //endregion
 
 }
