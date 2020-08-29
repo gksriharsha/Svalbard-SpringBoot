@@ -1,5 +1,11 @@
 package com.project.Svalbard.Controller;
 
+import com.project.Svalbard.Model.db.Classification;
+import com.project.Svalbard.Model.db.Dataset;
+import com.project.Svalbard.Model.db.ExecutionClf;
+import com.project.Svalbard.Model.db.Task;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -7,8 +13,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api")
 public class ApiController {
-    @GetMapping(value = "/python")
-    public String postdata() {
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private Classification classification;
+
+    @Autowired
+    private Dataset dataset;
+
+    @Autowired
+    private ExecutionClf executionClf;
+
+    @Autowired
+    private Task task;
+
+    @GetMapping("/")
+    public String home() {
         return "Hello";
     }
 }

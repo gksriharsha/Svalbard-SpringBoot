@@ -1,10 +1,12 @@
 package com.project.Svalbard.Model.db;
 
 import org.hibernate.annotations.Type;
+import org.springframework.stereotype.Component;
 
 import javax.persistence.*;
 import java.util.UUID;
 
+@Component
 @Entity
 @Table(name = "dataset")
 public class Dataset {

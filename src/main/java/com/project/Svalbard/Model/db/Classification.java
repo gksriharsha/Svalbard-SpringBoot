@@ -1,9 +1,12 @@
 package com.project.Svalbard.Model.db;
 
 
+import org.springframework.stereotype.Component;
+
 import javax.persistence.*;
 import java.util.UUID;
 
+@Component
 @Table(name = "classification")
 @Entity
 public class Classification {

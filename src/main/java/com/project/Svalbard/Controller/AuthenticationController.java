@@ -1,5 +1,7 @@
 package com.project.Svalbard.Controller;
 
+import com.project.Svalbard.Model.APIAuthToken;
+import com.project.Svalbard.Model.Requests.ApiAuthenticationRequest;
 import com.project.Svalbard.Model.Requests.AuthenticationRequest;
 import com.project.Svalbard.Model.Requests.AuthenticationResponse;
 import com.project.Svalbard.Service.MyUserDetailsService;
@@ -29,7 +31,7 @@ public class AuthenticationController {
     private JwtUtil jwtUtil;
 
     @RequestMapping(value = "/app/authenticate", method = RequestMethod.POST)
-    public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
+    public ResponseEntity<?> createAppAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword()));
@@ -42,5 +44,17 @@ public class AuthenticationController {
         final String jwt = jwtUtil.generateToken(userDetails);
 
         return ResponseEntity.ok(new AuthenticationResponse(jwt, authenticationRequest.getUsername(), jwtUtil.extractExpiration(jwt)));
+    }
+
+    @RequestMapping(value = "/api/authenticate", method = RequestMethod.POST)
+    public ResponseEntity<?> createApiAuthenticationToken(@RequestBody ApiAuthenticationRequest authenticationRequest) throws Exception {
+        try {
+            authenticationManager.authenticate(
+                    new APIAuthToken(authenticationRequest.getPlatform(), authenticationRequest.getAPIkey()));
+        } catch (BadCredentialsException e) {
+            throw new Exception("Invalid Username or Password");
+        }
+
+        return ResponseEntity.ok("Authenticated");
     }
 }

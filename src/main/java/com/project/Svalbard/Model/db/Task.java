@@ -1,7 +1,10 @@
 package com.project.Svalbard.Model.db;
 
+import org.springframework.stereotype.Component;
+
 import javax.persistence.*;
 
+@Component
 @Entity
 @Table(name = "task")
 public class Task {
