@@ -1,19 +1,16 @@
 package com.project.Svalbard.Model;
 
-import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
 import javax.security.auth.Subject;
 
-public class APIAuthToken extends AbstractAuthenticationToken {
+public class APIAuthToken extends PreAuthenticatedAuthenticationToken {
 
     private String key;
     private String program;
 
-    public APIAuthToken(String APIkey, String program) {
-        super(null);
-        this.key = APIkey;
-        this.program = program;
-        super.setAuthenticated(true);
+    public APIAuthToken(Object aPrincipal, Object aCredentials) {
+        super(aPrincipal, aCredentials);
     }
 
     @Override

@@ -1,44 +1,55 @@
 package com.project.Svalbard.Configuration;
 
-import com.project.Svalbard.Filters.JwtApiFilter;
+import com.project.Svalbard.Filters.AgentFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @Order(1)
 public class APISecurityAdapter extends WebSecurityConfigurerAdapter {
 
-    private String principalRequestHeader = "APIkey";
 
-    private String principalRequestValue = "1";
+    @Autowired
+    private AgentAuthProvider agentAuthProvider;
+
+    //TODO: This filter should be developed for multiple headers
+    //@Autowired
+    //private CustomAgentAuthProvider customAgentAuthProvider;
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(agentAuthProvider);
+    }
 
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
-        JwtApiFilter filter = new JwtApiFilter(principalRequestHeader);
-        filter.setAuthenticationManager(new AuthenticationManager() {
 
-            @Override
-            public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-                String principal = (String) authentication.getPrincipal();
-                if (!principalRequestValue.equals(principal)) {
-                    throw new BadCredentialsException("The API key was not found or not the expected value.");
-                }
-                authentication.setAuthenticated(true);
-                return authentication;
-            }
-        });
-        httpSecurity.
-                antMatcher("/api/**").
-                csrf().disable().
-                sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).
-                and().addFilter(filter).authorizeRequests().anyRequest().authenticated();
+        AgentFilter agentFilter = new AgentFilter();
+        //CustomAgentFilter customAgentFilter = new CustomAgentFilter();
+        agentFilter.setAuthenticationManager(authenticationManager());
+        //customAgentFilter.setAuthenticationManager(authenticationManager());
+
+        httpSecurity.csrf().disable()
+                .authorizeRequests()
+                .antMatchers("/api/authenticate").permitAll()
+                .antMatchers("/api/**").authenticated()
+                .and()
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
+        httpSecurity.authenticationProvider(agentAuthProvider);
+        //httpSecurity.authenticationProvider(customAgentAuthProvider);
+
+        httpSecurity.cors().disable();
+
+        httpSecurity.addFilterBefore(agentFilter, UsernamePasswordAuthenticationFilter.class);
+        //httpSecurity.addFilterBefore(customAgentFilter, UsernamePasswordAuthenticationFilter.class);
     }
 
 
