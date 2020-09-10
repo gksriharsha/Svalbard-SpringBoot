@@ -18,10 +18,6 @@ public class APISecurityAdapter extends WebSecurityConfigurerAdapter {
     @Autowired
     private AgentAuthProvider agentAuthProvider;
 
-    //TODO: This filter should be developed for multiple headers
-    //@Autowired
-    //private CustomAgentAuthProvider customAgentAuthProvider;
-
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.authenticationProvider(agentAuthProvider);
@@ -31,9 +27,8 @@ public class APISecurityAdapter extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity httpSecurity) throws Exception {
 
         AgentFilter agentFilter = new AgentFilter();
-        //CustomAgentFilter customAgentFilter = new CustomAgentFilter();
         agentFilter.setAuthenticationManager(authenticationManager());
-        //customAgentFilter.setAuthenticationManager(authenticationManager());
+        agentFilter.setAuthenticationSuccessHandler(new AgentAuthenticationSuccessHandler());
 
         httpSecurity.csrf().disable()
                 .authorizeRequests()
@@ -44,12 +39,10 @@ public class APISecurityAdapter extends WebSecurityConfigurerAdapter {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
         httpSecurity.authenticationProvider(agentAuthProvider);
-        //httpSecurity.authenticationProvider(customAgentAuthProvider);
 
         httpSecurity.cors().disable();
 
         httpSecurity.addFilterBefore(agentFilter, UsernamePasswordAuthenticationFilter.class);
-        //httpSecurity.addFilterBefore(customAgentFilter, UsernamePasswordAuthenticationFilter.class);
     }
 
 

@@ -1,9 +1,10 @@
 package com.project.Svalbard.Controller;
 
-import com.project.Svalbard.Model.APIAuthToken;
 import com.project.Svalbard.Model.Requests.ApiAuthenticationRequest;
+import com.project.Svalbard.Model.Requests.ApiAuthenticationResponse;
 import com.project.Svalbard.Model.Requests.AuthenticationRequest;
 import com.project.Svalbard.Model.Requests.AuthenticationResponse;
+import com.project.Svalbard.Service.AgentAuthService;
 import com.project.Svalbard.Service.MyUserDetailsService;
 import com.project.Svalbard.Util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,9 @@ public class AuthenticationController {
     private MyUserDetailsService myUserDetailsService;
 
     @Autowired
+    private AgentAuthService agentAuthService;
+
+    @Autowired
     private JwtUtil jwtUtil;
 
     @RequestMapping(value = "/app/authenticate", method = RequestMethod.POST)
@@ -49,12 +53,14 @@ public class AuthenticationController {
     @RequestMapping(value = "/api/authenticate", method = RequestMethod.POST)
     public ResponseEntity<?> createApiAuthenticationToken(@RequestBody ApiAuthenticationRequest authenticationRequest) throws Exception {
         try {
-            authenticationManager.authenticate(
-                    new APIAuthToken(authenticationRequest.getPlatform(), authenticationRequest.getAPIkey()));
+            if (agentAuthService.authenticateAgent(authenticationRequest)) {
+                String token = agentAuthService.generateAPItoken(authenticationRequest.getPlatform());
+                return ResponseEntity.ok(new ApiAuthenticationResponse(token));
+            }
         } catch (BadCredentialsException e) {
             throw new Exception("Invalid Username or Password");
         }
 
-        return ResponseEntity.ok("Authenticated");
+        return ResponseEntity.badRequest().build();
     }
 }

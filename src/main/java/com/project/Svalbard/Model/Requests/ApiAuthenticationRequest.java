@@ -3,7 +3,7 @@ package com.project.Svalbard.Model.Requests;
 public class ApiAuthenticationRequest {
 
     private String platform;
-    private String APIkey;
+    private String apikey;
     private String token;
 
     public ApiAuthenticationRequest() {
@@ -17,12 +17,12 @@ public class ApiAuthenticationRequest {
         this.platform = platform;
     }
 
-    public String getAPIkey() {
-        return APIkey;
+    public String getApikey() {
+        return apikey;
     }
 
-    public void setAPIkey(String APIkey) {
-        this.APIkey = APIkey;
+    public void setApikey(String apikey) {
+        this.apikey = apikey;
     }
 
     public String getToken() {

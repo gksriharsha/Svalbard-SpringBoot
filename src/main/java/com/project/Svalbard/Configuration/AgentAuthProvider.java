@@ -1,26 +1,26 @@
 package com.project.Svalbard.Configuration;
 
-import com.project.Svalbard.Dao.APIRepository;
+import com.project.Svalbard.Model.APIAuthToken;
+import com.project.Svalbard.Service.AgentAuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.stereotype.Component;
 
 @Component
 public class AgentAuthProvider implements AuthenticationProvider {
 
     @Autowired
-    private APIRepository apiRepository;
+    private AgentAuthService authService;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 
         String principal = (String) authentication.getPrincipal();
         String credentials = (String) authentication.getCredentials();
-        if (apiRepository.findByProgram(principal).getProgram().equals(principal) && apiRepository.findByProgram(principal).getApikey().equals(credentials)) {
+        if (authService.verifyAgent(principal, credentials)) {
             authentication.setAuthenticated(true);
             return authentication;
         }
@@ -29,6 +29,6 @@ public class AgentAuthProvider implements AuthenticationProvider {
 
     @Override
     public boolean supports(Class<?> authentication) {
-        return authentication.isAssignableFrom(PreAuthenticatedAuthenticationToken.class);
+        return authentication.isAssignableFrom(APIAuthToken.class);
     }
 }
