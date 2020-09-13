@@ -1,5 +1,6 @@
 package com.project.Svalbard.Configuration;
 
+import com.project.Svalbard.Filters.AgentAuthenticationSuccessHandler;
 import com.project.Svalbard.Filters.AgentFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -12,14 +13,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @Order(1)
-public class APISecurityAdapter extends WebSecurityConfigurerAdapter {
+public class ApiSecurityAdapter extends WebSecurityConfigurerAdapter {
 
 
     @Autowired
     private AgentAuthProvider agentAuthProvider;
 
     @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+    protected void configure(AuthenticationManagerBuilder auth) {
         auth.authenticationProvider(agentAuthProvider);
     }
 

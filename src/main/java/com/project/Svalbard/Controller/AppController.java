@@ -1,12 +1,12 @@
 package com.project.Svalbard.Controller;
 
-import com.project.Svalbard.Dao.ClassificationRepository;
-import com.project.Svalbard.Dao.DatasetRepository;
 import com.project.Svalbard.Model.Angular.GeneralCard;
 import com.project.Svalbard.Model.db.Classification;
 import com.project.Svalbard.Service.AppService;
 import com.project.Svalbard.Util.Mapper;
+import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,16 +19,11 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/app")
 @CrossOrigin(origins = "http://localhost:4200")
+@Api(tags = "Application Endpoint", description = "All the APIs for data retrieval are here")
 public class AppController {
 
     @Autowired
     private AppService appService;
-
-    @Autowired
-    private ClassificationRepository classificationRepository;
-
-    @Autowired
-    private DatasetRepository datasetRepository;
 
 
     @GetMapping(value = "/home")
@@ -45,8 +40,8 @@ public class AppController {
     }
 
     @GetMapping(value = "/hp-search/{option}")
-    public ResponseEntity<List<Map<String, Object>>> filterByHP(@PathVariable(value = "option") String option) throws Exception {
-        List<Classification> cl = new ArrayList<>();
+    public ResponseEntity<List<Map<String, Object>>> filterByHP(@PathVariable(value = "option") String option) {
+        List<Classification> cl;
         HashMap<String, String> params = new HashMap<>();
         params.put("Classifier", "KNN");
         params.put("K", "29");
@@ -63,20 +58,19 @@ public class AppController {
             return ResponseEntity.ok(cl.stream().map(row -> AppService.convertToFlexCard(row, required))
                     .map(Mapper::getfromObject).collect(Collectors.toList()));
         }
-        return null;
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
     @GetMapping(value = "/filter/{param}/{value}")
     public ResponseEntity<List<GeneralCard>> filterbyParameters(@PathVariable(value = "param") String param,
-                                                                @PathVariable(value = "value") float value) throws Exception {
+                                                                @PathVariable(value = "value") float value) {
         if (param.equals("Accuracy")) {
             return ResponseEntity.ok(appService.accuracyfilter(value));
         }
         if (param.equals("FScore")) {
             return ResponseEntity.ok(appService.fscorefilter(value));
         }
-
-        return null;
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
 }

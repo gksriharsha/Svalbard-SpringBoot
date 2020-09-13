@@ -1,4 +1,4 @@
-package com.project.Svalbard.Configuration;
+package com.project.Svalbard.Filters;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;

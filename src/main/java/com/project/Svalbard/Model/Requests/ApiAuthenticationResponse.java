@@ -1,6 +1,10 @@
 package com.project.Svalbard.Model.Requests;
 
+import javax.validation.constraints.NotNull;
+
 public class ApiAuthenticationResponse {
+
+    @NotNull
     private String token;
 
     public ApiAuthenticationResponse(String token) {
@@ -8,7 +12,6 @@ public class ApiAuthenticationResponse {
     }
 
     public String getToken() {
-
         return token;
     }
 
