@@ -1,13 +1,20 @@
 package com.project.Svalbard.Model.Angular;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
 import java.util.UUID;
 
 public class Dataset {
 
+    @NotNull
     private UUID fid;
+    @NotNull
     private String name;
+    @Positive
     private int features;
+    @Positive
     private int observations;
+    @Positive
     private int classes;
 
     public Dataset(UUID fid, String name, int features, int observations, int classes) {

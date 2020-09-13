@@ -7,7 +7,10 @@ import com.project.Svalbard.Model.Requests.AuthenticationResponse;
 import com.project.Svalbard.Service.AgentAuthService;
 import com.project.Svalbard.Service.MyUserDetailsService;
 import com.project.Svalbard.Util.JwtUtil;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/")
+@Api(tags = "Authentication Endpoint", value = "Authentication endpoint", description = "Endpoint for authenticating users and agents")
 public class AuthenticationController {
 
     @Autowired
@@ -34,13 +38,14 @@ public class AuthenticationController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @ApiOperation("Application Authentication endpoint")
     @RequestMapping(value = "/app/authenticate", method = RequestMethod.POST)
-    public ResponseEntity<?> createAppAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
+    public ResponseEntity<AuthenticationResponse> createAppAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword()));
         } catch (BadCredentialsException e) {
-            throw new Exception("Invalid Username or Password");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
         final UserDetails userDetails = myUserDetailsService.loadUserByUsername(authenticationRequest.getUsername());
@@ -50,17 +55,18 @@ public class AuthenticationController {
         return ResponseEntity.ok(new AuthenticationResponse(jwt, authenticationRequest.getUsername(), jwtUtil.extractExpiration(jwt)));
     }
 
+    @ApiOperation("Agents Authentication endpoint")
     @RequestMapping(value = "/api/authenticate", method = RequestMethod.POST)
-    public ResponseEntity<?> createApiAuthenticationToken(@RequestBody ApiAuthenticationRequest authenticationRequest) throws Exception {
+    public ResponseEntity<ApiAuthenticationResponse> createApiAuthenticationToken(@RequestBody ApiAuthenticationRequest authenticationRequest) {
         try {
             if (agentAuthService.authenticateAgent(authenticationRequest)) {
                 String token = agentAuthService.generateAPItoken(authenticationRequest.getPlatform());
                 return ResponseEntity.ok(new ApiAuthenticationResponse(token));
             }
         } catch (BadCredentialsException e) {
-            throw new Exception("Invalid Username or Password");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
-        return ResponseEntity.badRequest().build();
+        return null;
     }
 }

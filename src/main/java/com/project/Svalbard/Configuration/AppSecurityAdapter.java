@@ -15,7 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @Order(2)
-public class SecurityAdapter extends WebSecurityConfigurerAdapter {
+public class AppSecurityAdapter extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private MyUserDetailsService myUserDetailsService;
@@ -34,6 +34,18 @@ public class SecurityAdapter extends WebSecurityConfigurerAdapter {
         auth.userDetailsService(myUserDetailsService);
     }
 
+    private static final String[] AUTH_WHITELIST = {
+            // -- swagger ui
+            "/v2/api-docs",
+            "/swagger-resources",
+            "/swagger-resources/**",
+            "/configuration/ui",
+            "/configuration/security",
+            "/swagger-ui.html",
+            "/webjars/**"
+            // other public endpoints of your API may be appended to this array
+    };
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
 
@@ -41,6 +53,7 @@ public class SecurityAdapter extends WebSecurityConfigurerAdapter {
         http.csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/app/authenticate").permitAll()
+                .antMatchers(AUTH_WHITELIST).permitAll()
                 .antMatchers("/app/**").authenticated()
                 .and()
                 .sessionManagement()
