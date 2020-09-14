@@ -11,9 +11,7 @@ public class Mapper {
     public static Map<String, Object> getfromObject(Object obj) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-        Map<String, Object> myObjectAsDict = (Map<String, Object>) mapper.convertValue(obj, Map.class);
-        System.out.println("--- " + myObjectAsDict);
-        return myObjectAsDict;
+        return (Map<String, Object>) mapper.convertValue(obj, Map.class);
     }
 
     public static Classification getasClassification(HashMap<String, Object> hashMap) {

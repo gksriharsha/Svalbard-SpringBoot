@@ -35,12 +35,15 @@ public class AnalyticsController {
                                      @PathVariable(value = "clf") String clf) throws Exception {
         CompletableFuture<List<Float>> accuracies = new CompletableFuture<>();
         CompletableFuture<List<Float>> fscores = new CompletableFuture<>();
-        if (metric.equals("Accuracy")) {
-            accuracies = analyticsService.getaccuracies(clf);
-        } else if (metric.equals("Fscore")) {
-            fscores = analyticsService.getaccuracies(clf);
-        } else {
-            return null;
+        switch (metric) {
+            case "Accuracy":
+                accuracies = analyticsService.getaccuracies(clf);
+                break;
+            case "Fscore":
+                fscores = analyticsService.getaccuracies(clf);
+                break;
+            default:
+                return null;
         }
 
         return (List<Float>) CompletableFuture.anyOf(accuracies, fscores).get();
@@ -62,19 +65,20 @@ public class AnalyticsController {
         if (datasetMetric.equals("all")) {
             List<String> datasetPropertyList = new ArrayList<>();
             Map<String, CompletableFuture<Double>> futureList = new HashMap<>();
-            HashMap<String, Object> dtsetHashMap = new HashMap<String, Object>();
+            HashMap<String, Object> dtsetHashMap;
             dtsetHashMap = (HashMap<String, Object>) Mapper.getfromObject(classifications.get(0).getdataset());
             new ArrayList<>(dtsetHashMap.keySet()).forEach(a -> {
-                if (!(a.contains("id") || a.contains("fid") || a.contains("name") || a.contains("hibernateLazyInitializer"))) {
-                    CompletableFuture<Double> value = analyticsService.computeMetric(classifications, a.toString(), operation);
-                    futureList.put(a.toString(), value);
+                if (!(a.contains("id") || a.contains("fid") || a.contains("name") ||
+                        a.contains("hibernateLazyInitializer"))) {
+                    CompletableFuture<Double> value = analyticsService.computeMetric(classifications, a, operation);
+                    futureList.put(a, value);
                 }
             });
             futureList.entrySet().stream().map(e -> {
                 try {
                     return_val.put(e.getKey(), e.getValue().get());
                 } catch (Exception f) {
-                    System.out.println(f);
+                    System.out.println(f.toString());
                 }
                 return return_val;
             }).collect(Collectors.toList());

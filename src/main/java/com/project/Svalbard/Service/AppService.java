@@ -17,18 +17,13 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
-
 @Service
 public class AppService {
-
-    //private static final Logger logger = LoggerFactory.getLogger(AppService.class);
-
     @Autowired
     private ClassificationRepository classificationRepository;
 
@@ -38,6 +33,7 @@ public class AppService {
     @Autowired
     private TaskRepository taskRepository;
 
+    @Transactional
     public List<GeneralCard> getCards(int numbers) {
         Classification clf;
 
@@ -49,7 +45,8 @@ public class AppService {
         return generalCardList;
     }
 
-    public List<HashMap<String, Object>> getFlexiCards(int numbers) throws Exception {
+    @Transactional
+    public List<HashMap<String, Object>> getFlexiCards(int numbers) {
 
         List<HashMap<String, Object>> Flexcards = new ArrayList<>();
 
@@ -69,7 +66,6 @@ public class AppService {
         GeneralCard gc = new GeneralCard();
         gc.setTask(clf.getTask().getName());
         gc.setPlatform(new Platform("Python", "scikit-learn"));
-        //logger.info("Classification Id for - " + clf.getFid());
         gc.setDataset(new Dataset(clf.getFid(), clf.getdataset().getName(), clf.getdataset().getFeatures(),
                 clf.getdataset().getInstances(), clf.getdataset().getNumberOfClasses()));
         gc.setProcess("Classification");
@@ -109,6 +105,7 @@ public class AppService {
         return flexCard;
     }
 
+    @Transactional
     public List<Classification> hpsearch(HashMap<String, String> searchparams) {
         HashMap<String, String> hplist = new HashMap<>();
         Task task = taskRepository.findByName(searchparams.get("Classifier"));
@@ -152,7 +149,7 @@ public class AppService {
 //        Example<Classification> clfex = Example.of(querclf, matcher);
 //        return classificationRepository.findAll(clfex); //TODO this function matches exactly greater than function should be implemented.
 //    }
-
+@Transactional
     public List<GeneralCard> accuracyfilter(float acc) {
         List<GeneralCard> orderedCards = new ArrayList<>();
         for (Classification c :
@@ -163,6 +160,7 @@ public class AppService {
         return orderedCards;
     }
 
+    @Transactional
     public List<GeneralCard> fscorefilter(float fscore) {
         List<GeneralCard> orderedCards = new ArrayList<>();
         for (Classification c :

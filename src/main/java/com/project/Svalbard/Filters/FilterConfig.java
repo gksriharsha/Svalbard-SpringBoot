@@ -15,11 +15,11 @@ public class FilterConfig {
         return registrationBean;
     }
 
-    @Bean
-    public FilterRegistrationBean<JwtFilter> appBean() {
-        FilterRegistrationBean<JwtFilter> registrationBean = new FilterRegistrationBean<>();
-        registrationBean.setFilter(new JwtFilter());
-        registrationBean.addUrlPatterns("/app/*");
-        return registrationBean;
-    }
+//    @Bean
+//    public FilterRegistrationBean<JwtFilter> appBean() {
+//        FilterRegistrationBean<JwtFilter> registrationBean = new FilterRegistrationBean<>();
+//        registrationBean.setFilter(new JwtFilter());
+//        registrationBean.addUrlPatterns("/app/*");
+//        return registrationBean;
+//    }
 }

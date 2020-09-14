@@ -10,7 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -35,13 +37,14 @@ public class AnalyticsService {
     }
 
     @Async
+    @Transactional
     public CompletableFuture<Double> computeMetric(List<Classification> classifications, String datasetMetric, String operation) {
         List<Double> resultMetricList = new ArrayList<>();
         List<Double> datasetMetricList = new ArrayList<>();
 
-        classifications.stream().map(c -> {
+        classifications.stream().map((Classification c) -> {
             resultMetricList.add((double) c.getAccuracy());
-            HashMap<String, Object> dtsetHashMap = new HashMap<String, Object>();
+            HashMap<String, Object> dtsetHashMap;
             dtsetHashMap = (HashMap<String, Object>) Mapper.getfromObject(c.getdataset());
             datasetMetricList.add(Double.valueOf(dtsetHashMap.get(
                     CustomStrCmp.getequivalent(datasetMetric, new ArrayList<>(dtsetHashMap.keySet()))).toString()));
@@ -52,6 +55,9 @@ public class AnalyticsService {
         double[] datasetMetricList2 = ArrayUtils.toPrimitive(datasetMetricList.toArray(new Double[datasetMetricList.size()]));
 
         if (operation.equals("Correlation")) {//TODO add more operations
+            if (Collections.max(datasetMetricList).equals(Collections.min(datasetMetricList))) {
+                return CompletableFuture.completedFuture(0.00);
+            }
             return CompletableFuture.completedFuture(new PearsonsCorrelation().correlation(resultList, datasetMetricList2));
         }
         if (operation.equals("Covariance")) //TODO implement covariance properly.
