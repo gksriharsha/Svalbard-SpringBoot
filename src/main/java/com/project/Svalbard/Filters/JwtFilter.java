@@ -42,14 +42,16 @@ public class JwtFilter extends OncePerRequestFilter {
                 if (e.toString().contains("expired")) {
                     SecurityContextHolder.clearContext();
                     httpServletResponse.sendError(HttpServletResponse.SC_FORBIDDEN, "Previous token expired. Please create new JWT token");
+                    return ;
                 } else {
                     SecurityContextHolder.clearContext();
                     httpServletResponse.sendError(HttpServletResponse.SC_BAD_REQUEST, "Improper token encountered.");
+                    return ;
                 }
             }
         }
 
-        if (username != null) {
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
             if (jwtUtil.validateToken(jwt, userDetails)) {
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

@@ -69,6 +69,15 @@ public class Classification {
 
     //region setters and getters
 
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
     public Dataset getdataset() {
         return dataset;
     }

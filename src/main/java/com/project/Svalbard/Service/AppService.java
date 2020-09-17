@@ -2,6 +2,7 @@ package com.project.Svalbard.Service;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.project.Svalbard.Annotations.LogExecutionTime;
 import com.project.Svalbard.Dao.ClassificationRepository;
 import com.project.Svalbard.Dao.DatasetRepository;
 import com.project.Svalbard.Dao.TaskRepository;
@@ -33,7 +34,7 @@ public class AppService {
     @Autowired
     private TaskRepository taskRepository;
 
-    @Transactional
+    @LogExecutionTime
     public List<GeneralCard> getCards(int numbers) {
         Classification clf;
 
@@ -45,7 +46,7 @@ public class AppService {
         return generalCardList;
     }
 
-    @Transactional
+    @LogExecutionTime
     public List<HashMap<String, Object>> getFlexiCards(int numbers) {
 
         List<HashMap<String, Object>> Flexcards = new ArrayList<>();
@@ -105,7 +106,7 @@ public class AppService {
         return flexCard;
     }
 
-    @Transactional
+    @LogExecutionTime
     public List<Classification> hpsearch(HashMap<String, String> searchparams) {
         HashMap<String, String> hplist = new HashMap<>();
         Task task = taskRepository.findByName(searchparams.get("Classifier"));
@@ -131,25 +132,7 @@ public class AppService {
 
         return classificationRepository.findAll(clfex);
     }
-
-//    public List<Classification> filterbyresults(List<Classification> originalList, Results results) {
-//        ExampleMatcher matcher = ExampleMatcher.matching().withIgnorePaths("id", "precision1", "recall1", "fscore1");
-//        HashMap<String, Object> resquery = (HashMap<String, Object>) Mapper.getfromObject(results);
-//        Classification clf = new Classification();
-//        HashMap<String, Object> clfmap = (HashMap<String, Object>) Mapper.getfromObject(clf);
-//        while (resquery.values().remove(null)) ;
-//        resquery.forEach((k, v) -> {
-//            clfmap.forEach((i, j) -> {
-//                if (CustomStrCmp.compare(k, i)) {
-//                    clfmap.replace(i, v);
-//                }
-//            });
-//        });
-//        Classification querclf = Mapper.getasClassification(clfmap);
-//        Example<Classification> clfex = Example.of(querclf, matcher);
-//        return classificationRepository.findAll(clfex); //TODO this function matches exactly greater than function should be implemented.
-//    }
-@Transactional
+    @LogExecutionTime
     public List<GeneralCard> accuracyfilter(float acc) {
         List<GeneralCard> orderedCards = new ArrayList<>();
         for (Classification c :
@@ -160,7 +143,7 @@ public class AppService {
         return orderedCards;
     }
 
-    @Transactional
+    @LogExecutionTime
     public List<GeneralCard> fscorefilter(float fscore) {
         List<GeneralCard> orderedCards = new ArrayList<>();
         for (Classification c :

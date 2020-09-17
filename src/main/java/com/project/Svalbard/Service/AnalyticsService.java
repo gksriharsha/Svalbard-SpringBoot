@@ -1,5 +1,7 @@
 package com.project.Svalbard.Service;
 
+import com.project.Svalbard.Annotations.CacheValue;
+import com.project.Svalbard.Annotations.LogExecutionTime;
 import com.project.Svalbard.Dao.AnalyticsRepository;
 import com.project.Svalbard.Model.db.Classification;
 import com.project.Svalbard.Util.CustomStrCmp;
@@ -8,6 +10,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -25,19 +28,21 @@ public class AnalyticsService {
     private AnalyticsRepository analyticsRepository;
 
     @Async
+    @LogExecutionTime
     public CompletableFuture<List<Float>> getaccuracies(String clf) {
         List<Float> accuracies = analyticsRepository.getacc(clf);
         return CompletableFuture.completedFuture(accuracies);
     }
 
     @Async
+    @LogExecutionTime
     public CompletableFuture<List<Float>> getfscore(String clf) {
         List<Float> accuracies = analyticsRepository.getfscore(clf);
         return CompletableFuture.completedFuture(accuracies);
     }
 
     @Async
-    @Transactional
+    @CacheValue
     public CompletableFuture<Double> computeMetric(List<Classification> classifications, String datasetMetric, String operation) {
         List<Double> resultMetricList = new ArrayList<>();
         List<Double> datasetMetricList = new ArrayList<>();
@@ -66,31 +71,4 @@ public class AnalyticsService {
         }
         return null;
     }
-
-
-//    public Double computeMetricSync(List<Classification> classifications,String datasetMetric, String operation)
-//    {
-//        List<Double> resultMetricList = new ArrayList<>();
-//        List<Double> datasetMetricList = new ArrayList<>();
-//
-//        classifications.stream().map(c -> {
-//            resultMetricList.add((double) c.getAccuracy());
-//            HashMap<String,Object> dtsetHashMap = new HashMap<String,Object>();
-//            dtsetHashMap = (HashMap<String, Object>) Mapper.getfromObject(c.getdataset());
-//            datasetMetricList.add( Double.valueOf(dtsetHashMap.get(datasetMetric).toString()));
-//            return c;
-//        }).collect(Collectors.toList());
-//
-//        double[] resultList = ArrayUtils.toPrimitive(resultMetricList.toArray(new Double[resultMetricList.size()]));
-//        double[] datasetMetricList2 = ArrayUtils.toPrimitive(datasetMetricList.toArray(new Double[datasetMetricList.size()]));
-//
-//        if (operation.equals("Correlation")) {//TODO add more operations
-//            return new PearsonsCorrelation().correlation(resultList, datasetMetricList2);
-//        }
-//        if (operation.equals("Covariance")) //TODO implement covariance properly.
-//        {
-//            return null;
-//        }
-//        return null;
-//    }
 }
