@@ -1,5 +1,6 @@
 package com.project.Svalbard.Controller;
 
+import com.project.Svalbard.Aspects.CachingAspect;
 import com.project.Svalbard.Dao.DatasetRepository;
 import com.project.Svalbard.Model.db.Classification;
 import com.project.Svalbard.Service.AnalyticsService;
@@ -51,40 +52,16 @@ public class AnalyticsController {
     public Map<String, Double> performOperation(@PathVariable(value = "operation") String operation,
                                                 @PathVariable(value = "datasetMetric") String datasetMetric,
                                                 @RequestBody HashMap<String,String> params) throws Exception {
-        //HashMap<String, String> params = new HashMap<>();
-        Map<String, Double> return_val = new HashMap<>();
-
-
+       
+        Map<String, Double> return_val;
 //        params.put("Classifier", "KNN");
 //        params.put("K", "29");
 //        params.put("Weights", "distance");
 //        params.put("Algorithm", "brute");
 
         List<Classification> classifications = appService.hpsearch(params);
-        if (datasetMetric.equals("all")) {
-            Map<String, CompletableFuture<Double>> futureList = new HashMap<>();
-            HashMap<String, Object> dtsetHashMap;
-            dtsetHashMap = (HashMap<String, Object>) Mapper.getfromObject(classifications.get(0).getdataset());
-            new ArrayList<>(dtsetHashMap.keySet()).forEach(a -> {
-                if (!(a.contains("id") || a.contains("fid") || a.contains("name") ||
-                        a.contains("hibernateLazyInitializer"))) {
-                    CompletableFuture<Double> value = analyticsService.computeMetric(classifications, a, operation);
-                    futureList.put(a, value);
-                }
-            });
-            futureList.entrySet().stream().map(e -> {
-                try {
-                    return_val.put(e.getKey(), e.getValue().get());
-                } catch (Exception f) {
-                    System.out.println(f.toString());
-                }
-                return return_val;
-            }).collect(Collectors.toList());
-        } else {
-            CompletableFuture<Double> value = analyticsService.computeMetric(classifications, datasetMetric, operation);
 
-            return_val.put(datasetMetric, value.get());
-        }
+        return_val = analyticsService.cachedMetric(classifications,datasetMetric, operation, new HashMap<>());
 
         return return_val;
     }

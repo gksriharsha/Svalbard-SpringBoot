@@ -11,12 +11,14 @@ import org.aspectj.lang.annotation.Aspect;
 
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -25,10 +27,10 @@ import java.util.stream.Collectors;
 @Component
 public class CachingAspect {
 
-    private ConcurrentHashMap<HashMap<String,List<Long>>,HashMap<String,CompletableFuture<Double>>> cacheMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<HashMap<String,List<Long>>,HashMap<String,Double>> cacheMap = new ConcurrentHashMap<>();
 
     @Around("@annotation(com.project.Svalbard.Annotations.CacheValue)")
-    public CompletableFuture<Double> storeCache(ProceedingJoinPoint joinPoint) throws Throwable {
+    public Map<String,Double> storeCache(ProceedingJoinPoint joinPoint) throws Throwable {
 
         // Get all the method params
         Object[] parameters = joinPoint.getArgs();
@@ -39,24 +41,45 @@ public class CachingAspect {
 
         HashMap<String,List<Long>> keyMap = new HashMap<>();
 
-        keyMap.put((String) parameters[2], idlist);
+        keyMap.put((String) parameters[2], idlist); // {"Correlation",[classification ids]}
 
-        HashMap<String,CompletableFuture<Double>> parameterMap = new HashMap<>();
+        HashMap<String,Double> parameterMap = new HashMap<>();
 
         if(!cacheMap.isEmpty())
         {
-            if(cacheMap.containsKey(keyMap) && cacheMap.get(keyMap).containsKey(parameters[1]))
+            if(cacheMap.containsKey(keyMap))
             {
-                System.out.println("Cache hit");
-                return cacheMap.get(keyMap).get(parameters[1]);
+                if(parameters[1].equals("all"))
+                {
+                    if(!keyMap.isEmpty())
+                    {
+                        parameters[3] = cacheMap.get(keyMap);
+                        System.out.println("Cache hit");
+                        System.out.println("Present keys "+cacheMap.get(keyMap).keySet());
+                    }
+                    HashMap<String,Double> valueset = (HashMap<String, Double>) joinPoint.proceed(parameters);
+                    valueset.forEach((k,v)->{
+                        if(!cacheMap.get(keyMap).containsKey(k))
+                        {
+                            cacheMap.get(keyMap).put(k, v);
+                        }
+                    });
+                    return valueset;
+                }
+                else
+                {
+                    if(cacheMap.get(keyMap).containsKey(parameters[1]))
+                    {
+                        System.out.println("Cache hit");
+                        return (HashMap) (new HashMap<>().put(parameters[1],cacheMap.get(keyMap).get(parameters[1])));
+                    }
+                }
             }
-            parameterMap = cacheMap.get(keyMap);
         }
-        CompletableFuture<Double> returnObject = (CompletableFuture<Double>) joinPoint.proceed(parameters);
-        System.out.println("Cache Miss");
-        parameterMap.put((String) parameters[1],returnObject );
-        cacheMap.put(keyMap, parameterMap);
-        return returnObject;
+        HashMap<String,Double> valueset = (HashMap<String, Double>) joinPoint.proceed(parameters);
+        System.out.println("Cache miss");
+        cacheMap.put(keyMap, valueset);
+        return valueset;
     }
 
     @After("@annotation(com.project.Svalbard.Annotations.ClearCache)")

@@ -14,10 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -41,21 +38,65 @@ public class AnalyticsService {
         return CompletableFuture.completedFuture(accuracies);
     }
 
-    @Async
     @CacheValue
+    public Map<String,Double> cachedMetric(List<Classification> classifications, String datasetMetric,
+                                           String operation,Map<String,Double> cachedValues)
+    {
+        Map<String, Double> return_val = new HashMap<>();
+        List<String> datasetColumns = new ArrayList<>(Mapper.getfromObject(classifications.get(0).getdataset()).keySet());
+        if (datasetMetric.equals("all"))
+        {
+            Map<String, CompletableFuture<Double>> futureList = new HashMap<>();
+            datasetColumns.forEach(column ->
+            {
+                if(cachedValues.containsKey(column))
+                {
+                    return_val.put(column, cachedValues.get(column));
+                    return;
+                }
+                if (!(column.contains("id") || column.contains("fid") || column.contains("name") ||
+                        column.contains("hibernateLazyInitializer")))
+                {
+                    CompletableFuture<Double> value = computeMetric(classifications, column, operation);
+                    futureList.put(column, value);
+                }
+            });
+            futureList.entrySet().forEach(e -> {
+                try {
+                    return_val.put(e.getKey(), e.getValue().get());
+                } catch (Exception f) {
+                    f.printStackTrace();
+                }
+            });
+        }
+        else {
+            CompletableFuture<Double> value = computeMetric(classifications, datasetMetric, operation);
+            try{
+                return_val.put(datasetMetric, value.get());
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+        return return_val;
+    }
+
+    @Async
     public CompletableFuture<Double> computeMetric(List<Classification> classifications, String datasetMetric, String operation) {
         List<Double> resultMetricList = new ArrayList<>();
         List<Double> datasetMetricList = new ArrayList<>();
 
-        classifications.stream().map((Classification c) -> {
-            resultMetricList.add((double) c.getAccuracy());
-            HashMap<String, Object> dtsetHashMap;
-            dtsetHashMap = (HashMap<String, Object>) Mapper.getfromObject(c.getdataset());
+        Iterator<Classification> itr_classification = classifications.iterator();
+        HashMap<String, Object> dtsetHashMap;
+        while(itr_classification.hasNext())
+        {
+            Classification tmp = itr_classification.next();
+            resultMetricList.add((double) tmp.getAccuracy());
+            dtsetHashMap = (HashMap<String, Object>) Mapper.getfromObject(tmp.getdataset());
             datasetMetricList.add(Double.valueOf(dtsetHashMap.get(
                     CustomStrCmp.getequivalent(datasetMetric, new ArrayList<>(dtsetHashMap.keySet()))).toString()));
-            return c;
-        }).collect(Collectors.toList());
-
+        }
         double[] resultList = ArrayUtils.toPrimitive(resultMetricList.toArray(new Double[resultMetricList.size()]));
         double[] datasetMetricList2 = ArrayUtils.toPrimitive(datasetMetricList.toArray(new Double[datasetMetricList.size()]));
 
