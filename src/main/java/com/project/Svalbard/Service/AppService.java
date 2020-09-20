@@ -108,6 +108,7 @@ public class AppService {
 
     @LogExecutionTime
     public List<Classification> hpsearch(HashMap<String, String> searchparams) {
+
         HashMap<String, String> hplist = new HashMap<>();
         Task task = taskRepository.findByName(searchparams.get("Classifier"));
         HashMap<String, Object> taskMap1 = (HashMap<String, Object>) Mapper.getfromObject(task);
@@ -118,18 +119,19 @@ public class AppService {
                 hplist.put(k, v);
             }
         });
-
+        //System.out.println("1****************");
         Classification queryclf;
         HashMap<String, Object> clfmap = new HashMap<>();
         hplist.forEach((k, v) -> {
             String hpnumber = taskMap.get(k);
             clfmap.put(hpnumber, v);
         });
+        //System.out.println("2*****************");
         queryclf = Mapper.getasClassification(clfmap);
         Example<Classification> clfex = Example.of(queryclf, ExampleMatcher.matching()
                 .withIgnorePaths("id", "accuracy", "precision", "fscore", "recall", "time", "precision1", "recall1", "fscore1")
                 .withIgnoreNullValues());
-
+        //System.out.println("3***************");
         return classificationRepository.findAll(clfex);
     }
     @LogExecutionTime
