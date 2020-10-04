@@ -1,5 +1,6 @@
 package com.project.Svalbard.Service;
 
+import com.project.Svalbard.Annotations.LogExecutionTime;
 import com.project.Svalbard.Dao.APIRepository;
 import com.project.Svalbard.Model.Requests.ApiAuthenticationRequest;
 import com.project.Svalbard.Model.db.API;
@@ -21,6 +22,7 @@ public class AgentAuthService {
         return apiRepository.findByProgram(program).getApikey();
     }
 
+    @LogExecutionTime
     public boolean authenticateAgent(ApiAuthenticationRequest request) throws BadCredentialsException {
         try {
             API api = apiRepository.findByProgram(request.getPlatform());
@@ -37,7 +39,7 @@ public class AgentAuthService {
 
         return token;
     }
-
+    @LogExecutionTime
     public boolean verifyAgent(String program, String token) {
         return agentAccess.containsKey(program) && agentAccess.get(program).equals(token);
     }
