@@ -1,6 +1,7 @@
 package com.project.Svalbard.Model.db;
 
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.*;
@@ -67,6 +68,15 @@ public class Classification {
     }
 
     //region setters and getters
+
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
 
     public Dataset getdataset() {
         return dataset;
@@ -222,4 +232,13 @@ public class Classification {
 
     //endregion
 
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("id", id)
+                .append("execution ", execution.getEid())
+                .append("dataset", dataset.getFid())
+                .toString();
+    }
 }

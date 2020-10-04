@@ -1,5 +1,6 @@
 package com.project.Svalbard.Model.db;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hibernate.annotations.Type;
 import org.springframework.stereotype.Component;
 
@@ -533,4 +534,14 @@ public class Dataset {
     //endregion
 
 
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("id", id)
+                .append("fid", fid)
+                .append("name", name)
+                .append("Instances", Instances)
+                .append("Features", Features)
+                .toString();
+    }
 }
