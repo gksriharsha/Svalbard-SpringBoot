@@ -8,6 +8,7 @@ import com.project.Svalbard.Service.AppService;
 import com.project.Svalbard.Util.Mapper;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityManager;
@@ -51,7 +52,7 @@ public class AnalyticsController {
     }
 
     @PostMapping(value = "/operation/{operation}/{datasetMetric}")
-    public Map<String, Double> performOperation(@PathVariable(value = "operation") String operation,
+    public ResponseEntity<Map<String, Double>> performOperation(@PathVariable(value = "operation") String operation,
                                                 @PathVariable(value = "datasetMetric") String datasetMetric,
                                                 @RequestBody HashMap<String,String> params) throws Exception {
        
