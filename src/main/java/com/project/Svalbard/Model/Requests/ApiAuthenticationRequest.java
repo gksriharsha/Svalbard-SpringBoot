@@ -29,6 +29,14 @@ public class ApiAuthenticationRequest {
         return apikey;
     }
 
+    public void setPlatform(String platform) {
+        this.platform = platform;
+    }
+
+    public void setApikey(String apikey) {
+        this.apikey = apikey;
+    }
+
     public String getToken() {
         return token;
     }

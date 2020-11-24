@@ -20,7 +20,7 @@ public class AgentAuthProvider implements AuthenticationProvider {
 
         String principal = (String) authentication.getPrincipal();
         String credentials = (String) authentication.getCredentials();
-        if (authService.verifyAgent(principal, credentials)) {
+        if (authService.verifyAgentAccess(principal, credentials)) {
             authentication.setAuthenticated(true);
             return authentication;
         }

@@ -1,8 +1,10 @@
 package com.project.Svalbard.Service;
 
 import com.project.Svalbard.Annotations.CacheValue;
+import com.project.Svalbard.Annotations.ClearCache;
 import com.project.Svalbard.Annotations.LogExecutionTime;
 import com.project.Svalbard.Dao.AnalyticsRepository;
+import com.project.Svalbard.Exceptions.CompletableFutureException;
 import com.project.Svalbard.Model.db.Classification;
 import com.project.Svalbard.Util.CustomStrCmp;
 import com.project.Svalbard.Util.Mapper;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,11 +42,17 @@ public class AnalyticsService {
     }
 
     @CacheValue
+    @Transactional
     public Map<String,Double> cachedMetric(List<Classification> classifications, String datasetMetric,
-                                           String operation,Map<String,Double> cachedValues)
-    {
+                                           String operation,Map<String,Double> cachedValues) throws CompletableFutureException {
         Map<String, Double> return_val = new HashMap<>();
         List<String> datasetColumns = new ArrayList<>(Mapper.getfromObject(classifications.get(0).getdataset()).keySet());
+        List<String> supportedOperations = new ArrayList<>();
+        supportedOperations.add("Correlation");
+        if(!supportedOperations.contains(operation))
+        {
+            return new HashMap<>();
+        }
         if (datasetMetric.equals("all"))
         {
             Map<String, CompletableFuture<Double>> futureList = new HashMap<>();
@@ -76,7 +85,7 @@ public class AnalyticsService {
             }
             catch (Exception e)
             {
-                e.printStackTrace();
+                throw new CompletableFutureException("Exception in value.get()");
             }
         }
         return return_val;
@@ -100,16 +109,14 @@ public class AnalyticsService {
         double[] resultList = ArrayUtils.toPrimitive(resultMetricList.toArray(new Double[resultMetricList.size()]));
         double[] datasetMetricList2 = ArrayUtils.toPrimitive(datasetMetricList.toArray(new Double[datasetMetricList.size()]));
 
-        if (operation.equals("Correlation")) {//TODO add more operations
-            if (Collections.max(datasetMetricList).equals(Collections.min(datasetMetricList))) {
-                return CompletableFuture.completedFuture(0.00);
-            }
-            return CompletableFuture.completedFuture(new PearsonsCorrelation().correlation(resultList, datasetMetricList2));
+
+        if (Collections.max(datasetMetricList).equals(Collections.min(datasetMetricList))) {
+            return CompletableFuture.completedFuture(0.00);
         }
-        if (operation.equals("Covariance")) //TODO implement covariance properly.
-        {
-            return null;
-        }
-        return null;
+        return CompletableFuture.completedFuture(new PearsonsCorrelation().correlation(resultList, datasetMetricList2));
     }
+
+    @ClearCache
+    public void clearCachefn()
+    {}
 }

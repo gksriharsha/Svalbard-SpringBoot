@@ -6,6 +6,8 @@ import com.project.Svalbard.Annotations.LogExecutionTime;
 import com.project.Svalbard.Dao.ClassificationRepository;
 import com.project.Svalbard.Dao.DatasetRepository;
 import com.project.Svalbard.Dao.TaskRepository;
+import com.project.Svalbard.Exceptions.EntryNotFoundException;
+import com.project.Svalbard.Exceptions.InvalidInputException;
 import com.project.Svalbard.Model.Angular.Dataset;
 import com.project.Svalbard.Model.Angular.GeneralCard;
 import com.project.Svalbard.Model.Angular.Platform;
@@ -35,6 +37,7 @@ public class AppService {
     private TaskRepository taskRepository;
 
     @LogExecutionTime
+    @Transactional
     public List<GeneralCard> getCards(int numbers) {
         Classification clf;
 
@@ -47,6 +50,7 @@ public class AppService {
     }
 
     @LogExecutionTime
+    @Transactional
     public List<HashMap<String, Object>> getFlexiCards(int numbers) {
 
         List<HashMap<String, Object>> Flexcards = new ArrayList<>();
@@ -107,35 +111,62 @@ public class AppService {
     }
 
     @LogExecutionTime
-    public List<Classification> hpsearch(HashMap<String, String> searchparams) {
-
-        HashMap<String, String> hplist = new HashMap<>();
-        Task task = taskRepository.findByName(searchparams.get("Classifier"));
-        HashMap<String, Object> taskMap1 = (HashMap<String, Object>) Mapper.getfromObject(task);
-        while (taskMap1.values().remove(null)) ;
-        BiMap<Object, String> taskMap = HashBiMap.create(taskMap1).inverse();
-        searchparams.forEach((k, v) -> {
-            if (!k.contains("Classifier")) {
-                hplist.put(k, v);
+    @Transactional
+    public List<Classification> hpsearch(HashMap<String, String> searchparams) throws InvalidInputException, EntryNotFoundException {
+        if(searchparams.isEmpty() || !searchparams.containsKey("Classifier"))
+        {
+            throw new InvalidInputException("Empty Hyperparameter set is not a valid input");
+        }
+        else {
+            HashMap<String, String> hplist = new HashMap<>();
+            Task task = null;
+            try {
+                task = taskRepository.findByName(searchparams.get("Classifier"));
+                if(task == null)
+                {
+                    throw new EntryNotFoundException("Classifier not present");
+                }
+            } catch (Exception e) {
+                throw new EntryNotFoundException("Classifier not present");
             }
-        });
-        //System.out.println("1****************");
-        Classification queryclf;
-        HashMap<String, Object> clfmap = new HashMap<>();
-        hplist.forEach((k, v) -> {
-            String hpnumber = taskMap.get(k);
-            clfmap.put(hpnumber, v);
-        });
-        //System.out.println("2*****************");
-        queryclf = Mapper.getasClassification(clfmap);
-        Example<Classification> clfex = Example.of(queryclf, ExampleMatcher.matching()
-                .withIgnorePaths("id", "accuracy", "precision", "fscore", "recall", "time", "precision1", "recall1", "fscore1")
-                .withIgnoreNullValues());
-        //System.out.println("3***************");
-        return classificationRepository.findAll(clfex);
+            HashMap<String, Object> taskMap1 = (HashMap<String, Object>) Mapper.getfromObject(task);
+            taskMap1.remove("id");
+            taskMap1.remove("name");
+            while (taskMap1.values().remove(null)) ;
+            BiMap<Object, String> taskMap = HashBiMap.create(taskMap1).inverse();
+            searchparams.forEach((k, v) -> {
+                if (!k.contains("Classifier")) {
+                    hplist.put(k, v);
+                }
+            });
+            if((hplist.keySet()).containsAll(taskMap.keySet()))
+            {
+                Classification queryclf;
+                HashMap<String, Object> clfmap = new HashMap<>();
+                hplist.forEach((k, v) -> {
+                    String hpnumber = taskMap.get(k);
+                    clfmap.put(hpnumber, v);
+                });
+
+                queryclf = Mapper.getasClassification(clfmap);
+                Example<Classification> clfex = Example.of(queryclf, ExampleMatcher.matching()
+                        .withIgnorePaths("id", "accuracy", "precision", "fscore", "recall", "time", "precision1", "recall1", "fscore1")
+                        .withIgnoreNullValues());
+
+                return classificationRepository.findAll(clfex);
+            }
+            else{
+                throw new InvalidInputException("Wrong Hyper parameters given as input");
+            }
+        }
     }
     @LogExecutionTime
-    public List<GeneralCard> accuracyfilter(float acc) {
+    @Transactional
+    public List<GeneralCard> accuracyfilter(float acc) throws InvalidInputException {
+        if(acc>1.0f || acc <0.0f)
+        {
+            throw new InvalidInputException("Accuracy cannot be more than 1 or less than 0");
+        }
         List<GeneralCard> orderedCards = new ArrayList<>();
         for (Classification c :
                 classificationRepository.
@@ -146,7 +177,12 @@ public class AppService {
     }
 
     @LogExecutionTime
-    public List<GeneralCard> fscorefilter(float fscore) {
+    @Transactional
+    public List<GeneralCard> fscorefilter(float fscore) throws InvalidInputException {
+        if(fscore >1.0f || fscore <0.0f)
+        {
+            throw new InvalidInputException("Accuracy cannot be more than 1 or less than 0");
+        }
         List<GeneralCard> orderedCards = new ArrayList<>();
         for (Classification c :
                 classificationRepository.
