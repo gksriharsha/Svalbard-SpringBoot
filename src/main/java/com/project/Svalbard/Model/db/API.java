@@ -1,5 +1,6 @@
 package com.project.Svalbard.Model.db;
 
+import lombok.Data;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.Column;
@@ -7,6 +8,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+@Data
 @Component
 @Table(name = "api")
 @Entity
@@ -20,28 +22,4 @@ public class API {
 
     @Column(name = "APIKey")
     private String apikey;
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public String getProgram() {
-        return program;
-    }
-
-    public void setProgram(String program) {
-        this.program = program;
-    }
-
-    public String getApikey() {
-        return apikey;
-    }
-
-    public void setApikey(String apikey) {
-        this.apikey = apikey;
-    }
 }

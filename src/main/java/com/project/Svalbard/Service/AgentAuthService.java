@@ -18,10 +18,6 @@ public class AgentAuthService {
 
     private ConcurrentHashMap<String, String> agentAccess = new ConcurrentHashMap<>();
 
-    public String getKey(String program) {
-        return apiRepository.findByProgram(program).getApikey();
-    }
-
     @LogExecutionTime
     public boolean authenticateAgent(ApiAuthenticationRequest request) throws BadCredentialsException {
         try {
@@ -31,7 +27,7 @@ public class AgentAuthService {
             throw new BadCredentialsException("Agent not found");
         }
     }
-
+    @LogExecutionTime
     public String generateAPItoken(String program) {
         String token = UUID.randomUUID().toString();
 
@@ -40,7 +36,13 @@ public class AgentAuthService {
         return token;
     }
     @LogExecutionTime
-    public boolean verifyAgent(String program, String token) {
+    public boolean verifyAgentAccess(String program, String token) {
         return agentAccess.containsKey(program) && agentAccess.get(program).equals(token);
     }
+    @LogExecutionTime
+    public void clearAccessList()
+    {
+        agentAccess.clear();
+    }
+
 }

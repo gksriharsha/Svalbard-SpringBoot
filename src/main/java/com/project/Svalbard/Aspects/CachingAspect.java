@@ -49,12 +49,12 @@ public class CachingAspect {
         {
             if(cacheMap.containsKey(keyMap))
             {
+                System.out.println("Cache hit");
                 if(parameters[1].equals("all"))
                 {
                     if(!keyMap.isEmpty())
                     {
                         parameters[3] = cacheMap.get(keyMap);
-                        System.out.println("Cache hit");
                         System.out.println("Present keys "+cacheMap.get(keyMap).keySet());
                     }
                     HashMap<String,Double> valueset = (HashMap<String, Double>) joinPoint.proceed(parameters);
@@ -70,15 +70,19 @@ public class CachingAspect {
                 {
                     if(cacheMap.get(keyMap).containsKey(parameters[1]))
                     {
-                        System.out.println("Cache hit");
-                        return (HashMap) (new HashMap<>().put(parameters[1],cacheMap.get(keyMap).get(parameters[1])));
+                        return new HashMap<String,Double>(){{
+                            put((String)parameters[1],cacheMap.get(keyMap).get(parameters[1]));
+                        }};
                     }
                 }
             }
         }
         HashMap<String,Double> valueset = (HashMap<String, Double>) joinPoint.proceed(parameters);
         System.out.println("Cache miss");
-        cacheMap.put(keyMap, valueset);
+        if(!valueset.isEmpty())
+        {
+            cacheMap.put(keyMap, valueset);
+        }
         return valueset;
     }
 

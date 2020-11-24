@@ -57,10 +57,6 @@ public class AnalyticsController {
                                                 @RequestBody HashMap<String,String> params) throws Exception {
        
         Map<String, Double> return_val;
-//        params.put("Classifier", "KNN");
-//        params.put("K", "29");
-//        params.put("Weights", "distance");
-//        params.put("Algorithm", "brute");
 
         List<Classification> classifications = appService.hpsearch(params);
 

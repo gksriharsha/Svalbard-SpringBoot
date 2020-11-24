@@ -2,7 +2,9 @@ package com.project.Svalbard.ServiceTests;
 
 import com.project.Svalbard.Exceptions.EntryNotFoundException;
 import com.project.Svalbard.Exceptions.InvalidInputException;
+import com.project.Svalbard.Model.Requests.ApiAuthenticationRequest;
 import com.project.Svalbard.Model.db.Classification;
+import com.project.Svalbard.Service.AgentAuthService;
 import com.project.Svalbard.Service.AppService;
 import org.hibernate.SessionFactory;
 import org.hibernate.internal.SessionFactoryImpl;
@@ -11,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -31,6 +34,9 @@ public class ApplicationTests {
 
     @Autowired
     AppService appService;
+
+    @Autowired
+    AgentAuthService authService;
 
     @Test
     @DisplayName("Check if the database is returning the classification objects")
@@ -64,13 +70,13 @@ public class ApplicationTests {
     void accfilterTest()
     {
         float cutoff = 0.9f;
-        float executedvalue = 0;
+        float executedValue = 0;
         try {
-            executedvalue = appService.accuracyfilter(cutoff).stream().min(Comparator.comparing(c -> c.getResults().getAccuracy())).get().getResults().getAccuracy();
+            executedValue = appService.accuracyfilter(cutoff).stream().min(Comparator.comparing(c -> c.getResults().getAccuracy())).get().getResults().getAccuracy();
         } catch (InvalidInputException e) {
             e.printStackTrace();
         }
-        assertTrue( executedvalue >= 0.9);
+        assertTrue( executedValue >= 0.9);
     }
 
     @Test
@@ -85,6 +91,39 @@ public class ApplicationTests {
             e.printStackTrace();
         }
         assertTrue( executedvalue >= 0.9);
+    }
+
+    @Test
+    @DisplayName("FlexCards Test")
+    void flexcardTest()
+    {
+        assertNotNull(appService.getFlexiCards(10));
+    }
+
+    @Test
+    @DisplayName("Authentication of Agent's Access")
+    void agentAccessTest()
+    {
+        ApiAuthenticationRequest request = new ApiAuthenticationRequest();
+        request.setApikey("1");
+        request.setPlatform("Python");
+        assertTrue(authService.authenticateAgent(request));
+    }
+
+    @Test
+    @DisplayName("Generate Agent's access tokens")
+    void generateAccessTokenTest()
+    {
+        assertNotNull(authService.generateAPItoken("Python"));
+        authService.clearAccessList();
+    }
+
+    @Test
+    @DisplayName("Verify Agent's current access")
+    void verifyAccessTest()
+    {
+        String token = authService.generateAPItoken("Python");
+        assertTrue(authService.verifyAgentAccess("Python", token));
     }
 
     @Nested
@@ -142,8 +181,9 @@ public class ApplicationTests {
             assertThrows(InvalidInputException.class,
                     () -> appService.accuracyfilter(2.0f));
         }
+
         @Test
-        @DisplayName("Results with accuracy filter")
+        @DisplayName("Results with F1 score filter")
         void f1scorefilterTest()
         {
             assertThrows(InvalidInputException.class,
@@ -153,6 +193,22 @@ public class ApplicationTests {
                     () -> appService.fscorefilter(2.0f));
         }
 
+        @Test
+        @DisplayName("Unknown program trying to get access")
+        void agentAuthenticationTest()
+        {
+            ApiAuthenticationRequest request = new ApiAuthenticationRequest();
+            request.setApikey("1");
+            request.setPlatform("Haskell");
+            assertThrows(BadCredentialsException.class, () ->authService.authenticateAgent(request));
+        }
+
+        @Test
+        @DisplayName("Non Authenticated Program getting verified in the list")
+        void agentAccessTest()
+        {
+            assertFalse(authService.verifyAgentAccess("Python", "1"));
+        }
     }
 
 }
