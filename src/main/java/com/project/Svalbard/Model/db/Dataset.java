@@ -25,6 +25,10 @@ public class Dataset {
 
     @Column(name = "name")
     private String name;
+
+    @Column(name = "url")
+    private String url;
+
     //region Dataset Attributes Mapped to the columns
     @Column(name = "NumericAttributes")
     private int NumericAttributes;

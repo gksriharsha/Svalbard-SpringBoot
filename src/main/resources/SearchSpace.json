@@ -1,0 +1,13 @@
+[
+  {
+    "Classifier": "KNN",
+    "Parameters": {
+      "K": {
+        "Minimum": 3,
+        "Maximum": 51
+      },
+      "weights": ["uniform","distance"],
+
+    }
+  }
+]

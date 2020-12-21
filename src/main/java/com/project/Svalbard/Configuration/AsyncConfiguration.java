@@ -14,7 +14,7 @@ public class AsyncConfiguration {
 
     @Bean(name = "taskExecutor")
     public Executor taskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor(); //TODO methods should be made async
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(4);
         executor.setQueueCapacity(150);
         executor.setMaxPoolSize(6);
